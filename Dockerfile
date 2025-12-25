@@ -2,6 +2,9 @@ FROM node:18-alpine
 
 WORKDIR /app
 
+# Install system dependencies for Prisma
+RUN apk add --no-cache openssl
+
 COPY package*.json ./
 # Install ALL dependencies (including ts-node/typescript)
 RUN npm install
