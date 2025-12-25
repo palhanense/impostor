@@ -8,11 +8,15 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - PORT=3000
-      - DATABASE_URL=file:../data/dev.db
-      # Using internal DNS to talk to Evolution
-      - EVOLUTION_API_URL=http://evolution_api:8080
-      - EVOLUTION_API_KEY=YOUR_EVOLUTION_KEY
+      - PORT=${PORT:-3000}
+      - DATABASE_URL=${DATABASE_URL:-file:./prisma/dev.db}
+      - MOCK_MODE=${MOCK_MODE:-false}
+      # API Keys
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - MERCADOPAGO_ACCESS_TOKEN=${MERCADOPAGO_ACCESS_TOKEN}
+      # Integrations
+      - EVOLUTION_API_URL=${EVOLUTION_API_URL:-http://evolution_api:8080}
+      - EVOLUTION_API_KEY=${EVOLUTION_API_KEY}
     volumes:
       # Persist SQLite DB
       - ./prisma:/app/prisma
