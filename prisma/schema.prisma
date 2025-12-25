@@ -1,0 +1,87 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id        String   @id @default(uuid())
+  phone     String   @unique
+  name      String
+  pixKey    String?  @map("pix_key")
+  balance   Float    @default(0.0)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  transactions Transaction[]
+  matches      Match[]       @relation("MatchImpostor")
+  participations Participant[]
+  bets         Bet[]
+}
+
+model Match {
+  id         String   @id @default(uuid())
+  code       String   @unique @default(cuid()) // Will replace with short code generation in service
+  status     String   @default("WAITING_PAYMENT") // WAITING_PAYMENT, ACTIVE, FINISHED
+  impostorId String?  @map("impostor_id")
+  secretWord String?  @map("secret_word")
+  totalPot   Float    @default(0.0) @map("total_pot")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  impostor     User?         @relation("MatchImpostor", fields: [impostorId], references: [id])
+  participants Participant[]
+  rounds       Round[]
+  transactions Transaction[]
+  bets         Bet[]
+}
+
+model Participant {
+  id        String   @id @default(uuid())
+  matchId   String   @map("match_id")
+  userId    String   @map("user_id")
+  role      String   @default("CIVILIAN") // CIVILIAN, IMPOSTOR
+  status    String   @default("PENDING_PIX") // PENDING_PIX, CONFIRMING_PIX, READY
+  tempData  String?  @map("temp_data") // Stores Pix Key waiting for confirmation
+  joinedAt  DateTime @default(now()) @map("joined_at")
+
+  match Match @relation(fields: [matchId], references: [id])
+  user  User  @relation(fields: [userId], references: [id])
+
+  @@unique([matchId, userId])
+}
+
+model Round {
+  id          String @id @default(uuid())
+  matchId     String @map("match_id")
+  roundNumber Int    @map("round_number")
+  status      String // CLUE_PITCH, VOTING, COMPLETED
+
+  match Match @relation(fields: [matchId], references: [id])
+}
+
+model Bet {
+  id        String   @id @default(uuid())
+  matchId   String   @map("match_id")
+  userId    String   @map("user_id")
+  targetId  String   @map("target_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  match Match @relation(fields: [matchId], references: [id])
+  user  User  @relation(fields: [userId], references: [id])
+}
+
+model Transaction {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  matchId   String?  @map("match_id")
+  amount    Float
+  type      String   // ENTRY_FEE, PRIZE_PAYOUT
+  status    String   @default("PENDING") // PENDING, COMPLETED
+  createdAt DateTime @default(now()) @map("created_at")
+  externalId String? @unique @map("external_id")
+
+  user  User   @relation(fields: [userId], references: [id])
+  match Match? @relation(fields: [matchId], references: [id])
+}
