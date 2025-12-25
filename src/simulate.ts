@@ -47,6 +47,16 @@ async function runSimulation() {
 
     console.log("\n[Thiago] Confirms");
     await controller.handleWebhook(mockReq("Sim", "5511999990002", "Thiago"), mockRes);
+
+    // 3. Pedro Joins (New User - Should trigger Payment Flow)
+    console.log("\n[Pedro] Joins");
+    await controller.handleWebhook(mockReq("Quero entrar nesse jogo", "5511999990003", "Pedro"), mockRes);
+
+    console.log("\n[Pedro] Sends Pix");
+    await controller.handleWebhook(mockReq("11999990003", "5511999990003", "Pedro"), mockRes);
+
+    console.log("\n[Pedro] Confirms");
+    await controller.handleWebhook(mockReq("Sim", "5511999990003", "Pedro"), mockRes);
 }
 
 runSimulation();
