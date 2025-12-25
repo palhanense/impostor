@@ -14,6 +14,7 @@ services:
       # API Keys
       - GEMINI_API_KEY=${GEMINI_API_KEY}
       - MERCADOPAGO_ACCESS_TOKEN=${MERCADOPAGO_ACCESS_TOKEN}
+      - NGROK_URL=http://72.61.47.40:3000
       # Integrations
       - EVOLUTION_API_URL=${EVOLUTION_API_URL:-http://evolution_api:8080}
       - EVOLUTION_API_KEY=${EVOLUTION_API_KEY}
