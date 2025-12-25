@@ -4,14 +4,14 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 // Configure MP
-const client = new MercadoPagoConfig({ 
-    accessToken: process.env.MERCADOPAGO_ACCESS_TOKEN || '', 
-    options: { timeout: 5000, idempotencyKey: 'impstr-pay-sandbox' } 
+const client = new MercadoPagoConfig({
+    accessToken: process.env.MERCADOPAGO_ACCESS_TOKEN || '',
+    options: { timeout: 5000, idempotencyKey: 'impstr-pay-sandbox' }
 });
 const payment = new Payment(client);
 
 export class PaymentService {
-    
+
     /**
      * Generates a Pix Payment for a user in a match.
      */
@@ -30,6 +30,8 @@ export class PaymentService {
         });
 
         try {
+            console.log("--- [DEBUG] STARTING MP PAYMENT ---");
+            console.log("Token Status:", process.env.MERCADOPAGO_ACCESS_TOKEN ? "Present" : "Missing");
             const result = await payment.create({
                 body: {
                     transaction_amount: amount,
@@ -43,6 +45,7 @@ export class PaymentService {
                     notification_url: `${process.env.NGROK_URL || 'http://localhost:3000'}/api/webhook/mp`
                 }
             });
+            console.log("--- [DEBUG] MP PAYMENT SUCCESS ---");
 
             // Save external ID to link webhook later
             await prisma.transaction.update({
@@ -75,24 +78,24 @@ export class PaymentService {
             // In production we would fetch payment status from MP:
             // const p = await payment.get({ id: paymentId });
             // const status = p.status;
-            
+
             // For MVP simplifiction assuming 'approved' if we get a hit or mock logic
             // Ideally we check p.status === 'approved'
 
             // Locate transaction
             // We stored paymentId as externalId? Or we search by external_reference?
             // Actually createPixPayment stored mp result.id as externalId.
-            
+
             const transaction = await prisma.transaction.findFirst({
-                 where: { externalId: paymentId.toString() }
+                where: { externalId: paymentId.toString() }
             });
-            
+
             if (transaction && transaction.status === 'PENDING') {
                 await prisma.transaction.update({
                     where: { id: transaction.id },
                     data: { status: 'COMPLETED' }
                 });
-                
+
                 // Update Total Pot
                 if (transaction.matchId) {
                     await prisma.match.update({
@@ -100,7 +103,7 @@ export class PaymentService {
                         data: { totalPot: { increment: transaction.amount } }
                     });
                 }
-                
+
                 return { success: true, transactionId: transaction.id, userId: transaction.userId, matchId: transaction.matchId };
             }
         }
