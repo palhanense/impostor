@@ -3,7 +3,7 @@ import qrcode from 'qrcode-terminal';
 
 const EVOLUTION_URL = process.env.EVOLUTION_API_URL || 'http://localhost:8080';
 const API_KEY = process.env.EVOLUTION_API_KEY || 'YOUR_EVOLUTION_KEY';
-const INSTANCE_NAME = 'ImpostorBot5';
+const INSTANCE_NAME = 'ImpostorBot6';
 
 // Helper to check valid QR
 function hasValidQR(d: any) {
@@ -36,7 +36,13 @@ async function setup() {
 
         // Retry Loop
         if (!hasValidQR(qrData)) {
-            console.log("QR missing or incomplete. Entering Retry Loop (max 5 attempts)...");
+            console.log("QR missing. Attempting Logout/Connect Kickstart...");
+            try {
+                await axios.delete(`${EVOLUTION_URL}/instance/logout/${INSTANCE_NAME}`, { headers: { 'apikey': API_KEY } });
+                console.log("Logout triggered to reset state.");
+            } catch (e) { console.log("Logout failed (ignored):", e.message); }
+
+            console.log("Entering Retry Loop (max 5 attempts)...");
 
             for (let i = 1; i <= 5; i++) {
                 console.log(`Attempt ${i}/5 - Fetching QR via Connect...`);
@@ -56,7 +62,7 @@ async function setup() {
                     console.log(`Attempt ${i} failed:`, e.message);
                 }
 
-                if (i < 5) await new Promise(r => setTimeout(r, 4000)); // Wait 4s
+                if (i < 5) await new Promise(r => setTimeout(r, 6000)); // Wait 6s
             }
         }
 
