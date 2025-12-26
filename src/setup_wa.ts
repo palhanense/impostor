@@ -11,20 +11,21 @@ async function setup() {
         await axios.get(`${EVOLUTION_URL}/`, { headers: { 'apikey': API_KEY } });
         console.log("Evolution API is UP.");
 
-        console.log(`Creating/Connecting instance '${INSTANCE_NAME}'...`);
-
-        // Check if exists
+        console.log(`Resetting instance '${INSTANCE_NAME}'...`);
         try {
-            await axios.get(`${EVOLUTION_URL}/instance/connect/${INSTANCE_NAME}`, { headers: { 'apikey': API_KEY } });
+            await axios.delete(`${EVOLUTION_URL}/instance/delete/${INSTANCE_NAME}`, { headers: { 'apikey': API_KEY } });
+            console.log("Instance deleted.");
         } catch (e) {
-            // Create if not exists
-            await axios.post(`${EVOLUTION_URL}/instance/create`, {
-                instanceName: INSTANCE_NAME,
-                token: 'impostor-token',
-                qrcode: true,
-                integration: 'WHATSAPP-BAILEYS'
-            }, { headers: { 'apikey': API_KEY } });
+            console.log("Delete skipped (not found).");
         }
+
+        console.log(`Creating instance '${INSTANCE_NAME}'...`);
+        await axios.post(`${EVOLUTION_URL}/instance/create`, {
+            instanceName: INSTANCE_NAME,
+            token: 'impostor-token',
+            qrcode: true,
+            integration: 'WHATSAPP-BAILEYS'
+        }, { headers: { 'apikey': API_KEY } });
 
         console.log("Fetching QR Code...");
         const connectRes = await axios.get(`${EVOLUTION_URL}/instance/connect/${INSTANCE_NAME}`, {
