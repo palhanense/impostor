@@ -3,7 +3,7 @@ import qrcode from 'qrcode-terminal';
 
 const EVOLUTION_URL = process.env.EVOLUTION_API_URL || 'http://localhost:8080';
 const API_KEY = process.env.EVOLUTION_API_KEY || 'YOUR_EVOLUTION_KEY';
-const INSTANCE_NAME = 'ImpostorBot';
+const INSTANCE_NAME = 'ImpostorBot2';
 
 async function setup() {
     try {
@@ -12,7 +12,6 @@ async function setup() {
         console.log("Evolution API is UP.");
 
         console.log(`Resetting instance '${INSTANCE_NAME}'...`);
-        /*
         try {
             await axios.delete(`${EVOLUTION_URL}/instance/delete/${INSTANCE_NAME}`, { headers: { 'apikey': API_KEY } });
             console.log("Instance deleted.");
@@ -27,8 +26,6 @@ async function setup() {
             qrcode: true,
             integration: 'WHATSAPP-BAILEYS'
         }, { headers: { 'apikey': API_KEY } });
-        */
-        console.log("Skipping Create/Delete. Assuming Exists.");
 
         console.log("Fetching QR Code...");
         const connectRes = await axios.get(`${EVOLUTION_URL}/instance/connect/${INSTANCE_NAME}`, {
