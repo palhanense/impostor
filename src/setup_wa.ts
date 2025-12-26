@@ -12,6 +12,7 @@ async function setup() {
         console.log("Evolution API is UP.");
 
         console.log(`Resetting instance '${INSTANCE_NAME}'...`);
+        /*
         try {
             await axios.delete(`${EVOLUTION_URL}/instance/delete/${INSTANCE_NAME}`, { headers: { 'apikey': API_KEY } });
             console.log("Instance deleted.");
@@ -26,6 +27,8 @@ async function setup() {
             qrcode: true,
             integration: 'WHATSAPP-BAILEYS'
         }, { headers: { 'apikey': API_KEY } });
+        */
+        console.log("Skipping Create/Delete. Assuming Exists.");
 
         console.log("Fetching QR Code...");
         const connectRes = await axios.get(`${EVOLUTION_URL}/instance/connect/${INSTANCE_NAME}`, {
