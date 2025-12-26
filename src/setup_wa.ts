@@ -3,7 +3,7 @@ import qrcode from 'qrcode-terminal';
 
 const EVOLUTION_URL = process.env.EVOLUTION_API_URL || 'http://localhost:8080';
 const API_KEY = process.env.EVOLUTION_API_KEY || 'YOUR_EVOLUTION_KEY';
-const INSTANCE_NAME = 'ImpostorBot4';
+const INSTANCE_NAME = 'ImpostorBot5';
 
 // Helper to check valid QR
 function hasValidQR(d: any) {
