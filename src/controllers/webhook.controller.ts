@@ -1,25 +1,45 @@
 import { Request, Response } from 'express';
 import { GeminiService } from '../services/gemini.service';
 import { GameService } from '../services/game.service';
+import { WhatsAppService } from '../services/whatsapp.service';
 
 const geminiService = new GeminiService();
 const gameService = new GameService(geminiService);
+const waService = new WhatsAppService();
 
 export class WebhookController {
     async handleWebhook(req: Request, res: Response) {
         try {
-            const { data } = req.body;
+            // WAHA sends payloads either directly or nested under "data".
+            const payload = (req.body && (req.body.data || req.body)) || {};
+            const incoming = payload.messages?.[0] || payload.message || payload;
 
-            if (!data || !data.key || !data.key.remoteJid) {
-                return res.sendStatus(200);
-            }
+            const messageContent =
+                incoming?.text?.body ??
+                incoming?.text ??
+                incoming?.body ??
+                incoming?.message ??
+                payload.body ??
+                payload.text;
 
-            const messageContent = data.message?.conversation || data.message?.extendedTextMessage?.text;
-            const remoteJid = data.key.remoteJid;
-            const senderName = data.pushName || "Unknown";
+            const remoteJid =
+                incoming?.from ??
+                incoming?.chatId ??
+                payload.from ??
+                payload.chatId;
+
+            const senderName =
+                incoming?.senderName ??
+                incoming?.pushName ??
+                incoming?.notifyName ??
+                incoming?.contactName ??
+                payload.senderName ??
+                payload.notifyName ??
+                "Unknown";
+
+            if (!remoteJid || !messageContent) return res.sendStatus(200);
+
             const senderPhone = remoteJid.split('@')[0];
-
-            if (!messageContent) return res.sendStatus(200);
 
             console.log(`Received from ${senderName} (${senderPhone}): ${messageContent}`);
 
@@ -77,7 +97,7 @@ export class WebhookController {
                         narration = "Ok, let's try again. What is your Pix Key?";
                     }
                 } else {
-                    narration = `Is this correct: ${participantData?.tempData}? (Sim/Não)`;
+                    narration = `Is this correct: ${participantData?.tempData}? (Sim/Nao)`;
                 }
             }
             else if (intent.type === 'NEW_GAME') {
@@ -107,7 +127,6 @@ export class WebhookController {
                         narration = "Could not join: " + e.message;
                     }
                 }
-                // ACTION LOGIC ... (Rest is same)
                 else if (activeMatch) {
                     if (intent.action === 'VOTE' && intent.target) {
                         const result = await gameService.processVote(activeMatch.id, senderPhone, intent.target);
@@ -130,6 +149,9 @@ export class WebhookController {
             }
 
             console.log("Response:", narration);
+
+            // Attempt to send the narration back to the user via WAHA
+            await waService.sendText(remoteJid, narration);
 
             return res.status(200).send({ status: 'PROCESSED' });
         } catch (error) {
